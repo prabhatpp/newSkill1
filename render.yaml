@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: student-platform
+    runtime: node
+    plan: free
+    buildCommand: npm --prefix frontend ci && npm --prefix frontend run build && npm --prefix backend ci
+    startCommand: npm --prefix backend start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20.19.0
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false

@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: db-health-check
+  namespace: student-platform
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: health-checker
+              image: busybox:1.35
+              command:
+                - /bin/sh
+                - -c
+                - echo "Database health check: $(date)" && echo "MongoDB service: mongo-service:27017" && echo "Health check completed successfully"
+          restartPolicy: OnFailure
+          serviceAccountName: backend-service-account

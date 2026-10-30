@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: student-platform-config
+  namespace: student-platform
+data:
+  NODE_ENV: "production"
+  # MONGO_URI moved to secret.yaml (secretKeyRef) — credentials must not live in a ConfigMap
+  FRONTEND_URL: "http://localhost:3000"
+  # NOTE: Replace FRONTEND_URL with the real public hostname before deploying to production.
+  REACT_APP_API_URL: ""
+  PORT: "5000"
