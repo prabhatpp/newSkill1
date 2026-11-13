@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -13,10 +14,29 @@ import Admin from './pages/Admin';
 import { RequireAuth, RequireAdmin } from './components/RouteGuards';
 import './App.css';
 
+// StrictMode re-runs effects during development; this module flag keeps one
+// browser page load from being counted twice.
+let visitRecorded = false;
+
+function TrackWebsiteOpen() {
+  useEffect(() => {
+    if (visitRecorded) return;
+    visitRecorded = true;
+    axios.post('/api/analytics/visit')
+      .then(response => {
+        window.dispatchEvent(new CustomEvent('website-views-updated', { detail: response.data.visits }));
+      })
+      .catch(() => {});
+  }, []);
+
+  return null;
+}
+
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <TrackWebsiteOpen />
         <div className="app">
           <Navbar />
           <main className="main-content">

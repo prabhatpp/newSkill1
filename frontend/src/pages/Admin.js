@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import Home from './Home';
+import Courses from './Courses';
+import Books from './Books';
 
 const sectionDetails = {
   '/courses': {
@@ -50,16 +53,30 @@ function Admin() {
         <span className="admin-role"><span className="admin-role-dot" /> ADMIN WORKSPACE</span>
       </div>
 
-      <section className="admin-welcome">
+      <nav className="admin-view-tabs" aria-label="Admin page sections">
+        <a className="admin-view-tab" href="#admin-overview">Overview</a>
+        <a className="admin-view-tab" href="#admin-public-home">Public home</a>
+        <a className="admin-view-tab" href="#admin-public-courses">Courses</a>
+        <a className="admin-view-tab" href="#admin-public-books">NCERT books</a>
+      </nav>
+
+      <section className="admin-welcome" id="admin-overview">
         <div className="admin-welcome-copy">
           <span className="admin-kicker">OVERVIEW</span>
           <h1>Good to see you, admin.</h1>
           <p>Keep an eye on your learning resources and jump into a section when you need to.</p>
         </div>
-        <button className="admin-refresh" type="button" onClick={loadOverview} disabled={loading}>
-          <span className={loading ? 'admin-refresh-icon is-spinning' : 'admin-refresh-icon'} aria-hidden="true">↻</span>
-          {loading ? 'Updating…' : 'Refresh data'}
-        </button>
+        <div className="admin-welcome-side">
+          <article className="admin-visit-card" aria-live="polite">
+            <span className="admin-visit-card-label">WEBSITE VIEWER COUNT</span>
+            <strong>{overview ? Number(overview.visits || 0).toLocaleString('en-IN') : loading ? '…' : '—'}</strong>
+            <span className="admin-visit-card-note">Total website opens and reloads</span>
+          </article>
+          <button className="admin-refresh" type="button" onClick={loadOverview} disabled={loading}>
+            <span className={loading ? 'admin-refresh-icon is-spinning' : 'admin-refresh-icon'} aria-hidden="true">↻</span>
+            {loading ? 'Updating…' : 'Refresh data'}
+          </button>
+        </div>
         <div className="admin-welcome-mark" aria-hidden="true">E</div>
       </section>
 
@@ -123,6 +140,21 @@ function Admin() {
         ) : !loading && !error ? (
           <div className="admin-empty-state">No sections are available right now.</div>
         ) : null}
+      </section>
+
+      <section className="admin-public-content" id="admin-public-home" aria-labelledby="admin-public-home-heading">
+        <div className="admin-public-heading"><span className="admin-kicker">PUBLIC WEBSITE</span><h2 id="admin-public-home-heading">Home page</h2></div>
+        <Home />
+      </section>
+
+      <section className="admin-public-content" id="admin-public-courses" aria-labelledby="admin-public-courses-heading">
+        <div className="admin-public-heading"><span className="admin-kicker">PUBLIC WEBSITE</span><h2 id="admin-public-courses-heading">All courses</h2></div>
+        <Courses />
+      </section>
+
+      <section className="admin-public-content" id="admin-public-books" aria-labelledby="admin-public-books-heading">
+        <div className="admin-public-heading"><span className="admin-kicker">PUBLIC WEBSITE</span><h2 id="admin-public-books-heading">All NCERT books</h2></div>
+        <Books />
       </section>
 
       <footer className="admin-footer"><span className="admin-footer-mark">E</span><span>EduPath Admin</span><span className="admin-footer-divider">·</span><span>Manage your learning platform</span></footer>

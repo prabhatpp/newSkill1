@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: student-platform
+    name: edupath
     runtime: node
     plan: free
     buildCommand: npm --prefix frontend ci && npm --prefix frontend run build && npm --prefix backend ci
@@ -12,6 +12,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGO_URI
+        sync: false
+      - key: ADMIN_EMAIL
         sync: false
       - key: JWT_SECRET
         generateValue: true
