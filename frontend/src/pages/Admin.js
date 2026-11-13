@@ -1,42 +1,132 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+
+const sectionDetails = {
+  '/courses': {
+    icon: '◈',
+    eyebrow: 'CAREER DISCOVERY',
+    description: 'Browse the career paths and streams available to students.'
+  },
+  '/books': {
+    icon: '▤',
+    eyebrow: 'LEARNING LIBRARY',
+    description: 'Browse NCERT books and check the current catalogue.'
+  }
+};
 
 function Admin() {
   const [overview, setOverview] = useState(null);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    axios.get('/api/admin/overview')
-      .then(response => setOverview(response.data))
-      .catch(() => setError('Could not load the admin overview. Please sign in again or check the server.'));
+  const loadOverview = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await axios.get('/api/admin/overview');
+      setOverview(response.data);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'Dashboard data could not be loaded. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    loadOverview();
+  }, [loadOverview]);
+
+  const stats = overview ? [
+    { label: 'Courses', value: overview.courses, icon: '◈', tone: 'violet', note: 'Career paths listed' },
+    { label: 'Streams', value: overview.streams, icon: '⌘', tone: 'blue', note: 'Areas of study' },
+    { label: 'NCERT books', value: overview.books, icon: '▤', tone: 'amber', note: 'Books in catalogue' }
+  ] : [];
+
   return (
-    <section>
-      <h1 className="section-title">Admin dashboard</h1>
-      <p className="section-subtitle">Overview of the website content and sections.</p>
-      {error && <div className="error-msg">{error}</div>}
-      {!overview && !error && <div className="loading">Loading dashboard...</div>}
-      {overview && (
-        <>
-          <div className="cards-grid">
-            <article className="feature-card"><h2>{overview.courses}</h2><p>Courses</p></article>
-            <article className="feature-card"><h2>{overview.streams}</h2><p>Streams covered</p></article>
-            <article className="feature-card"><h2>{overview.books}</h2><p>NCERT books</p></article>
+    <div className="admin-page">
+      <div className="admin-topline">
+        <div className="admin-breadcrumb"><span>EduPath</span><span className="admin-breadcrumb-separator">/</span><strong>Admin</strong></div>
+        <span className="admin-role"><span className="admin-role-dot" /> ADMIN WORKSPACE</span>
+      </div>
+
+      <section className="admin-welcome">
+        <div className="admin-welcome-copy">
+          <span className="admin-kicker">OVERVIEW</span>
+          <h1>Good to see you, admin.</h1>
+          <p>Keep an eye on your learning resources and jump into a section when you need to.</p>
+        </div>
+        <button className="admin-refresh" type="button" onClick={loadOverview} disabled={loading}>
+          <span className={loading ? 'admin-refresh-icon is-spinning' : 'admin-refresh-icon'} aria-hidden="true">↻</span>
+          {loading ? 'Updating…' : 'Refresh data'}
+        </button>
+        <div className="admin-welcome-mark" aria-hidden="true">E</div>
+      </section>
+
+      <section className="admin-section" aria-labelledby="admin-stats-heading">
+        <div className="admin-section-heading">
+          <div>
+            <span className="admin-kicker">YOUR PLATFORM</span>
+            <h2 id="admin-stats-heading">At a glance</h2>
           </div>
-          <h2 className="section-title" style={{ marginTop: '2rem' }}>Website sections</h2>
-          <div className="cards-grid">
-            {overview.sections.map(section => (
-              <Link className="feature-card" to={section.path} key={section.path}>
-                <h3>{section.name}</h3>
-                <span>Open section →</span>
-              </Link>
+          {overview && !loading && <span className="admin-live-status"><span /> Live data</span>}
+        </div>
+
+        {error && (
+          <div className="admin-error" role="alert">
+            <span className="admin-error-icon" aria-hidden="true">!</span>
+            <div><strong>Unable to load overview</strong><p>{error}</p></div>
+            <button type="button" onClick={loadOverview} disabled={loading}>Try again</button>
+          </div>
+        )}
+
+        {loading && !overview ? (
+          <div className="admin-stats-grid" aria-label="Loading dashboard data" aria-busy="true">
+            {[1, 2, 3].map(item => <div className="admin-stat-card admin-skeleton-card" key={item}><span /><span /><span /></div>)}
+          </div>
+        ) : overview && (
+          <div className="admin-stats-grid" aria-live="polite">
+            {stats.map(stat => (
+              <article className="admin-stat-card" key={stat.label}>
+                <div className="admin-stat-top"><span className={`admin-stat-icon ${stat.tone}`} aria-hidden="true">{stat.icon}</span><span className="admin-stat-label">{stat.label}</span></div>
+                <div className="admin-stat-value">{stat.value}</div>
+                <div className="admin-stat-note">{stat.note}</div>
+              </article>
             ))}
           </div>
-        </>
-      )}
-    </section>
+        )}
+      </section>
+
+      <section className="admin-section admin-manage-section" aria-labelledby="admin-manage-heading">
+        <div className="admin-section-heading">
+          <div>
+            <span className="admin-kicker">QUICK ACCESS</span>
+            <h2 id="admin-manage-heading">Explore your sections</h2>
+          </div>
+          <span className="admin-section-count">{overview?.sections?.length || 0} sections</span>
+        </div>
+        {overview?.sections?.length > 0 ? (
+          <div className="admin-sections-grid">
+            {overview.sections.map((section, index) => {
+              const details = sectionDetails[section.path] || { icon: '↗', eyebrow: 'PLATFORM SECTION', description: 'Open this section to explore its content.' };
+              return (
+                <Link className="admin-section-card" to={section.path} key={section.path}>
+                  <span className={`admin-section-icon section-icon-${index % 2}`} aria-hidden="true">{details.icon}</span>
+                  <span className="admin-section-eyebrow">{details.eyebrow}</span>
+                  <strong>{section.name}</strong>
+                  <span className="admin-section-description">{details.description}</span>
+                  <span className="admin-section-link">Open section <span aria-hidden="true">↗</span></span>
+                </Link>
+              );
+            })}
+          </div>
+        ) : !loading && !error ? (
+          <div className="admin-empty-state">No sections are available right now.</div>
+        ) : null}
+      </section>
+
+      <footer className="admin-footer"><span className="admin-footer-mark">E</span><span>EduPath Admin</span><span className="admin-footer-divider">·</span><span>Manage your learning platform</span></footer>
+    </div>
   );
 }
 
